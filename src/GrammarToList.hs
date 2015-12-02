@@ -1,25 +1,26 @@
 module GrammarToList
     ( grammarToList
-      listToGrammar
+    , listToGrammar
     ) where
 import qualified Data.Vector as V
+import Data.Vector (Vector, empty, cons, snoc)
 import Grammar
-
-data Symbol = Term Term | NonTerm NonTerm | Break
+import Symbol
 
 grammarToList :: Grammar -> Vector Symbol
-grammarToList = V.concatMap (V.snoc Break . V.map toSymbol)
-
-toSymbol (Left l) = NonTerm l
-toSymbol (Right r) = Term r
+grammarToList = V.concatMap ( (Symbol Nothing `cons`) . (toSymbol `fmap`))
 
 listToGrammar :: Vector Symbol -> Grammar
-listToGrammar = go
+listToGrammar vec =
+  case V.foldr go (empty, empty )  vec of
+  (l,g) -> if null l then g else error "No ending Nothing"
+
+go :: Symbol -> (Line, Grammar) -> (Line, Grammar)
+go s (l, g) = go' (fromSymbol s)
   where
-  go vs =
-    if V.null vs
-        then
-          []
-        else
-          let (next , rest) = V.break (/= Break) vs in
-              next `V.cons` go (drop 1) rest
+  go' Nothing = --Push the finished line
+    ( empty
+    , l `cons` g)
+  go' (Just n) = -- Add the Node to the current line
+    ( n `cons` l
+    , g)

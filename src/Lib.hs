@@ -2,11 +2,15 @@ module Lib
     ( compress
     , decompress
     ) where
-import qualified Data.ByteString at B
-import qualified Data.Text as T
+import qualified Data.ByteString.Lazy as B
+import qualified Data.Text.Lazy as T
+import Data.Text (Text)
+import BuildGrammar
+import GrammarToList
+import PadicEncode
 
-compress :: T.Text -> B.ByteString
+compress :: Text -> B.ByteString
 compress = padicEncode . grammarToList . buildGrammar
 
-decompress :: B.ByteString -> T.Text
-decompress = inflateGrammar . listToGrammar . decodePadic
+decompress :: B.ByteString -> Text
+decompress = inflateGrammar . listToGrammar . padicDecode

@@ -1,17 +1,20 @@
-module Grammarr
+module Grammar
     ( Grammar
     , Line
-    , NonTermHunk (..)
+    , NonTerm (..)
+    , Node (..)
     , Term (..)
     ) where
-import qualified Data.Text as T
-import Data.Vector
+import Data.Vector (Vector)
+import qualified Data.Vector as V
 
 newtype Term = Term {toChar :: Char}
   deriving (Read, Show, Eq, Ord)
-newtype NonTermHunk = NonTerm {name :: Int}
+newtype NonTerm = NonTerm {name :: Int}
+  deriving (Read, Show, Eq, Ord)
+newtype Node = Node (Either NonTerm Term)
   deriving (Read, Show, Eq, Ord)
 
-type Line = [Either NonTermHunk Term]
+type Line = Vector Node
 
 type Grammar = Vector Line
