@@ -16,5 +16,5 @@ tests = [
 prop1 b = b == False
   where types = (b :: Bool)
 
-prop2 i = i == 42
+prop2 i = i <= 42
   where types = (i :: Int)
