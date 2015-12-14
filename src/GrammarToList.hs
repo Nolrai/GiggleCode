@@ -5,10 +5,11 @@ module GrammarToList
 import qualified Data.Vector as V
 import Data.Vector (Vector, empty, cons, snoc)
 import Grammar
-import Symbol
+import Glif
 
 grammarToList :: Grammar -> Vector Symbol
-grammarToList = V.concatMap ( (Symbol Nothing `cons`) . (toSymbol `fmap`))
+grammarToList
+  (Grammar
 
 listToGrammar :: Vector Symbol -> Grammar
 listToGrammar vec =

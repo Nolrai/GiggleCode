@@ -5,8 +5,8 @@ module BuildGrammar
 import qualified Data.Text as T
 import Grammar
 
-buildGrammar :: T.Text -> Grammar
+buildGrammar :: T.Text -> Grammar Char
 buildGrammar = undefined
 
-inflateGrammar :: Grammar -> T.Text
+inflateGrammar :: Grammar Char -> T.Text
 inflateGrammar = undefined
