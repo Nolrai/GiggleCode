@@ -10,7 +10,7 @@ import GrammarToList
 import PadicEncode
 
 compress :: Text -> B.ByteString
-compress = padicEncode . grammarToList . buildGrammar
+compress = padicEncode . undefined . buildGrammar
 
 decompress :: B.ByteString -> Text
-decompress = inflateGrammar . listToGrammar . padicDecode
+decompress = inflateGrammar . undefined  . padicDecode

@@ -42,4 +42,4 @@ data Rules (n :: Nat) t where
   Rule :: forall n t. Line n t -> Rules n t -> Rules (1 + n) t
 
 data Grammar t where
-  Grammar :: forall n t. Line n t -> Rules n t -> Grammar t
+  Grammar :: forall n t. Line (1 + n) t -> Rules n t -> Grammar t

@@ -7,17 +7,16 @@ import Data.Vector (Vector, empty, cons, snoc)
 import Grammar
 import Glif
 
-grammarToList :: Grammar -> Vector Symbol
-grammarToList
-  (Grammar
+grammarToList :: Grammar a -> Vector (Glif n a)
+grammarToList = V.concatMap ( (Glif Nothing `cons`) . (toGlif `fmap`))
 
-listToGrammar :: Vector Symbol -> Grammar
+listToGrammar :: Vector (Glif n a) -> Grammar a
 listToGrammar vec =
   case V.foldr go (empty, empty )  vec of
   (l,g) -> if null l then g else error "No ending Nothing"
 
-go :: Symbol -> (Line, Grammar) -> (Line, Grammar)
-go s (l, g) = go' (fromSymbol s)
+go :: Glif n a -> (Line n a, Grammar a) -> (Line n a, Grammar a)
+go s (l, g) = go' (fromGlif s)
   where
   go' Nothing = --Push the finished line
     ( empty

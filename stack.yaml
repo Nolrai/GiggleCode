@@ -4,4 +4,5 @@ packages:
 - '.'
 extra-deps:
 - finite-typelits-0.1.0.0
-resolver: lts-3.6
+- cabal-helper-0.6.2.0
+resolver: nightly-2015-12-27

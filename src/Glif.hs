@@ -2,7 +2,7 @@
 {-# LANGUAGE TypeOperators #-}
 module Glif
     ( Glif (..)
-    , fromGlif
+    , toGlif
     ) where
 import Grammar (Node (..), onNonterm)
 import GHC.TypeLits
