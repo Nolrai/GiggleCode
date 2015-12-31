@@ -2,14 +2,14 @@
 {-# LANGUAGE StandaloneDeriving, ExplicitForAll #-}
 
 module Grammar
-    ( Grammar
-    , Line
-    , Rules
+    ( Grammar (..)
+    , Line (..)
+    , Rules (..)
     , Node (..)
     , onNonterm
     ) where
 import Data.Finite as F
-import GHC.TypeLits hiding (Symbol)
+import GHC.TypeLits
 import qualified GHC.TypeLits as T
 import Data.Vector as V
 import qualified Prelude as P
@@ -41,5 +41,5 @@ data Rules (n :: Nat) t where
   Nil :: forall t. Rules 0 t
   Rule :: forall n t. Line n t -> Rules n t -> Rules (1 + n) t
 
-data Grammar t where
-  Grammar :: forall n t. Line (1 + n) t -> Rules n t -> Grammar t
+data Grammar n t where
+  Grammar :: forall n t. Line (1 + n) t -> Rules n t -> Grammar n t
