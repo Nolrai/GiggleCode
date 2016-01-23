@@ -1,78 +1,54 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE GADTs #-}
 module GrammarToList
     ( grammarToList
     , listToGrammar
     ) where
-import qualified Data.Vector as V
-import Data.Vector (Vector, empty, cons, snoc)
 import Grammar
-import Glif
-import GHC.TypeLits
-import Data.Finite (strengthen, weaken)
+import qualified Data.List as L
 import Data.Maybe (fromMaybe, maybe)
 
-data Proxy n
-
-grammarToList :: Show a => Grammar n a -> Vector (Glif (1 + n) a)
+grammarToList :: forall a. Grammar a -> [Maybe (Node a)]
 grammarToList (Grammar l r) =
-  V.concatMap ( (Glif Nothing `cons`) . (toGlif `fmap`)) ( l' `V.cons`  r')
+  foldr sepByNothing [] ( l' :  r')
   where
+  sepByNothing :: [Node a] -> [Maybe (Node a)] -> [Maybe (Node a)]
+  sepByNothing x' acc =
+    let x = map Just x' in
+      case acc of
+      [] -> x
+      xs -> x ++ (Nothing : xs)
+  sepByNothing x xs = map Just x ++  (Nothing  : xs)
+  l' :: [Node a]
   l' = lineToList l
+  r' :: [[Node a]]
   r' = rulesToList r
 
-rulesToList :: Rules n a -> Vector (Vector (Node n a))
-rulesToList Nil = empty
-rulesToList (Rule l r) = lineToList l : V.map (onNonterm weaken) r
+rulesToList :: Rules a -> [[Node a]]
+rulesToList (Rules a) = map lineToList a
 
-lineToList :: Line n a -> Vector (Node n a)
-lineToList (Line a b rest) = a `V.cons` (b `V.cons` rest)
+listToRules :: Show a => [[Node a]] -> Rules a
+listToRules = Rules . map listToLine
 
-listToGrammar :: Show a => Vector (Glif n a) -> Grammar n a
-listToGrammar vec =
-  case V.foldr go (mempty, mempty)  vec of
-  ([], l:g) -> toGrammar' l g
-  (l , g  ) -> toGrammar' l g
+lineToList :: Line a -> [Node a]
+lineToList (Line a b rest) = a : b : rest
 
-toGrammar' :: Show a => [Node n a] -> [[Node n a]] -> Grammar n t
-toGrammar' l r = Grammar (toLine l) (toRules . strengthen' r)
+listToGrammar :: Show a => [Maybe (Node a)] -> Grammar a
+listToGrammar l =
+  case splitNothings l of
+  (line, rules) -> Grammar (listToLine line) (listToRules rules)
 
-strengthen' :: Show a => [[Node (1 + n) a]] -> [[Node n a]]
-strengthen' = map (map strengthenNode)
-
-strengthenNode :: Show a => Node (1 + n) a -> Node n a
-strengthenNode =
-  onNonterm (fromMaybe (error "failed strengthen") strengthen)
-
-toRules :: (Show a, KnownNat n) => [[Node n a]] -> Rules (1 + n) a
-toRules l = let p = (error "" :: Proxy n) in
-  case (l, natVal p) of
-    ([x] , 0) -> Rule (toLine x) Nil
-    (x:xs, n) -> Rule (toLine x) (toRules $ strengthen' xs)
-    (_   , n) ->
-      error $ "invalid list into to toRules,"
-        ++ " n = "  ++ show n
-        ++ ", l = " ++ show l
-
-toLine :: Show a => [Node n a] -> Line n a
-toLine (a:b:rest) = Line a b (V.fromList rest)
-toLine other = error $ "toLine called on (" ++ show other ++ ")"
-
-go ::
-  forall n a. Show a =>
-  Glif n a ->
-  ([Node n a], [[Node n a]]) ->
-  ([Node n a], [[Node n a]])
-go s (l, g) = go' (fromGlif s)
+splitNothings :: [Maybe a] -> ([a], [[a]])
+splitNothings =
+  foldr go ([],[])
   where
-  go' :: Maybe (Node n a) -> ([Node n a], [[Node n a]])
-  go' Nothing = --Push the finished line
-    ( mempty
-    , l : g)
-  go' (Just n) = -- Add the Node to the current line
-    ( n : l
-    , g)
+  go n (l, r) =
+    case n of
+    Nothing -> --Add finished line to rules
+      ([], l : r)
+    Just a -> --Add to current line
+      (a : l, r)
+
+listToLine :: Show a => [Node a] -> Line a
+listToLine (a:b:rest) = Line a b rest
+listToLine other = error $ "toLine called on (" ++  show other ++  ")"

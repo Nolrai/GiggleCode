@@ -1,45 +1,61 @@
-{-# LANGUAGE GADTs, DataKinds, TypeOperators, KindSignatures #-}
-{-# LANGUAGE StandaloneDeriving, ExplicitForAll #-}
+{-# LANGUAGE StandaloneDeriving, GADTSyntax, DeriveGeneric #-}
 
 module Grammar
     ( Grammar (..)
     , Line (..)
     , Rules (..)
     , Node (..)
-    , onNonterm
+    , verifyGrammar
+    , verifyRules
+    , verifyLine
+    , verifyNode
     ) where
-import Data.Finite as F
-import GHC.TypeLits
-import qualified GHC.TypeLits as T
-import Data.Vector as V
 import qualified Prelude as P
 import Prelude hiding (map)
 import Control.Arrow (first)
+import Numeric.Natural
+import Control.Monad
+import GHC.Generics
 
-instance KnownNat n => Read (Finite n) where
-  readsPrec n s = P.map (first finite) $ readsPrec n s
+-- A node is either term, or reference to a lower line
+data Node t = Term t | Nonterm Natural
+  deriving (Eq, Ord, Show, Read, Generic)
 
-data Node n t = Term t | Nonterm (Finite n)
+--A line is at least a pair of nodes.
+data Line t = Line (Node t) (Node t)  [(Node t)]
+  deriving (Eq, Ord, Show, Read, Generic)
 
-deriving instance Eq t => Eq (Node n t)
-deriving instance Ord t => Ord (Node n t)
-deriving instance Show t => Show (Node n t)
-deriving instance (KnownNat n, Read t) => Read (Node n t)
+lineToList (Line a b rest) = a : b : rest
 
-onNonterm :: (Finite n -> Finite m) -> Node n t -> Node m t
-onNonterm _ (Term n) = Term n
-onNonterm f (Nonterm n) = (Nonterm (f n))
 
-data Line n t = Line (Node n t) (Node n t) (Vector (Node n t))
+-- A dictionary, or "Rules" is a list of lines.
+newtype Rules t = Rules [Line t]
+  deriving (Eq, Ord, Show, Read, Generic)
 
-deriving instance Eq t => Eq (Line n t)
-deriving instance Ord t => Ord (Line n t)
-deriving instance Show t => Show (Line n t)
-deriving instance (KnownNat n, Read t) => Read (Line n t)
+-- A complete Grammar includes the "start" line as well.
+--   Usually that will be much larger then the resT.
+data Grammar t where
+  Grammar :: Line t -> Rules t -> Grammar t
+  deriving (Eq, Ord, Show, Read, Generic)
 
-data Rules (n :: Nat) t where
-  Nil :: forall t. Rules 0 t
-  Rule :: forall n t. Line n t -> Rules n t -> Rules (1 + n) t
+-- Verify that all the nodes in a Grammar refer to lines they know about.
+verifyGrammar :: Grammar t -> Maybe ()
+verifyGrammar (Grammar l r) =
+  do
+  n <- verifyRules r
+  verifyLine n l
 
-data Grammar n t where
-  Grammar :: forall n t. Line (1 + n) t -> Rules n t -> Grammar n t
+-- The heart of verifyGrammar,
+-- (returns the number of rule lines,
+--   so that verifyGrammar knows what the "start" line can referto.)
+verifyRules (Rules l) =
+  do
+  u <- zipWithM (\ i line -> verifyLine i line) [0..] (reverse l)
+  return (length u)
+
+-- Verify that none of the nodes in this line refer to a line above n.
+verifyLine n l = P.mapM_ (verifyNode n) (lineToList l)
+
+--"verifyNode n node" make sure "node" only referes to lines below, (n or less).
+verifyNode _ (Term t) = return ()
+verifyNode n (Nonterm m) = guard (n > fromIntegral m)

@@ -1,17 +1,20 @@
+
 module BuildGrammar
     ( buildGrammar
     , inflateGrammar
     ) where
-import qualified Data.ByteString as B
+import qualified ByteString as B
+import ByteString (ByteString)
 import qualified Data.Vector as V
 import Grammar
 import Data.Word
 import Data.MultiSet as M
 import Data.List as L
 
+{-
 toVector
   :: B.Bytestring
-  -> (Rules 1 Word8, V.Vector (Glif 0 Char8))
+  -> (Rules 1 Word8, V.Vector (Glif 0 Word8))
 toVector str = threeToTwo (B.fold step (mempty, mempty, Nothing) str)
 where
   threeToTwo (ms, vec, last) = (ms, vec)
@@ -21,7 +24,7 @@ where
     , c
     )
 
-step :: KnownNat n => Rules (1 + n) Word8 -> V.Vector (Glif n Char8) -> (Rules (2 + n) Word8, V.Vector (Glif (1+n) Char8))
+step :: KnownNat n => Rules (1 + n) Word8 -> V.Vector (Glif n Word8) -> (Rules (2 + n) Word8, V.Vector (Glif (1+n) Word8))
 step rules vec = (newRules, newVec)
   where
   (ms, newVec) = V.fold microStep (mepmpty, mempty, Nothing)
@@ -40,9 +43,12 @@ instance Iter n => Iter (1 + n) where
   iter Proxy f a = f (iter Proxy  a)
 
 type IterMax = 10
+-}
 
-buildGrammar :: Bytestring -> Grammar Word8
-buildGrammar raw = uncurry Grammar $ iter (Proxy :: Proxy Max) (uncurry step) $ toVector raw
+buildGrammar :: ByteString -> Grammar Word8
+buildGrammar raw =
+  --uncurry Grammar $ iter (Proxy :: Proxy Max) (uncurry step) $ toVector raw
+  undefined
 
-inflateGrammar :: Grammar Word8 -> V.Vector (Glif IterMax Char8)
+inflateGrammar :: Grammar Word8 -> ByteString
 inflateGrammar = undefined

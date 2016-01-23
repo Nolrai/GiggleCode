@@ -1,20 +1,27 @@
+module Main (main) where
 import Test.Framework (defaultMain, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 
 import Test.QuickCheck
 
+import Grammar
+import GrammarTest
+
 main :: IO ()
 main = defaultMain tests
 
-tests = [
-        testGroup "Sorting Group 1" [
-                testProperty "prop1" prop1,
-                testProperty "prop2" prop2
-           ]
-      ]
+tests = [ testGroup "Sorting Group 1"
+          [ testProperty "prop1" prop1
+          , testProperty "prop2" prop2
+          ]
+        , testGroup "Real Group"
+          [ grammarTests
+          ]
+        ]
 
 prop1 b = b == False
   where types = (b :: Bool)
 
 prop2 i = i <= 42
   where types = (i :: Int)
+

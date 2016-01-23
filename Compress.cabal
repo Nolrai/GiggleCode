@@ -16,6 +16,12 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Lib
+  other-modules:
+                       BuildGrammar
+                     , ByteString
+                     , Grammar
+                     , GrammarToList
+                     , PadicEncode
   build-depends:       base >= 4.8.1 && < 5
                      , bytestring
                      , text
@@ -34,7 +40,7 @@ executable Compress-exe
 
 test-suite Compress-test
   type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
+  hs-source-dirs:      test, src
   main-is:             Spec.hs
   build-depends:       base
                      , Compress
