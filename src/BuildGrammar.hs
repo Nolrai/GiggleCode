@@ -5,50 +5,47 @@ module BuildGrammar
     ) where
 import qualified ByteString as B
 import ByteString (ByteString)
-import qualified Data.Vector as V
 import Grammar
 import Data.Word
 import Data.MultiSet as M
 import Data.List as L
+import qualified Data.Vector as V
 
-{-
-toVector
-  :: B.Bytestring
-  -> (Rules 1 Word8, V.Vector (Glif 0 Word8))
-toVector str = threeToTwo (B.fold step (mempty, mempty, Nothing) str)
-where
-  threeToTwo (ms, vec, last) = (ms, vec)
-  step c (ms, vec, next) =
-    ( maybe ms (\next' -> insert (c, next') ms) next
-    , cons c vec
-    , c
+{- step
+ - stepNumber the step this is, counting from the inside out.
+ - result : If Left then there are no repeated pairs left to encode, so shortcircut.
+ -          If Right, then build a multi set of pairs, and encode the one that occurse the most.
+ - -}
+
+step :: Int -> Either (Rules Word8, [Node Word8]) -> Either (Rules Word8, [Node Word8])
+step _ result@(Left _) = result
+step stepNumber (Right input@(rules, list)) = if maxOccurs > 1 then Right (newRules, newList) else Left input
+  where
+  (multiSet, newList, _) = foldl' microStep (mempty, mempty, Nothing) list
+  (newLine, maxOccurs) = L.maximumBy (compare `on` snd) $ M.toOccursList ms
+  newRules = Rules newLine rules
+  microStep :: (MultiSet (Word8, Word8), [Node Word8], Maybe Word8) -> Node Word8 -> (MultiSet (Word8, Word8), [Node Word8], Maybe Word8)
+  microStep (multiSet', newList', Nothing) b = (multiSet', newList', Just b)
+  microStep (multiSet', newList', Just b) a =
+    let ab' =
+        if (a,b) == newLine then NonTerminal stepNumber in --uses lazyness, make sure that newLine doesn't depend on newList
+    ( insert (a,b) multiSet
+    , ab' : tail newList'
+    , Just a --Can't depend on newLine or we get infinite loop.
     )
 
-step :: KnownNat n => Rules (1 + n) Word8 -> V.Vector (Glif n Word8) -> (Rules (2 + n) Word8, V.Vector (Glif (1+n) Word8))
-step rules vec = (newRules, newVec)
-  where
-  (ms, newVec) = V.fold microStep (mepmpty, mempty, Nothing)
-  newLine = L.maximumBy (compare `on` snd) $ M.toOccursList ms
-  newRules = Rules newLine rules
+buildGrammar :: Int -> ByteString -> Grammar Word8
+buildGrammar maxSteps raw =
+  uncurry Grammar . second toLine . either id id $ foldr step (Rules [], map Term toList raw) [maxSteps, maxSteps-1 .. 0]
 
-Type Iter = 100
-
-class KnownNumber n => Iter n where
-  inter :: Proxy n -> (forall m. A m -> A (1 + m)) -> A 0 -> A n
-
-instance KnownNumber 0 => Iter 0 where
-  iter _ _ a = a
-
-instance Iter n => Iter (1 + n) where
-  iter Proxy f a = f (iter Proxy  a)
-
-type IterMax = 10
--}
-
-buildGrammar :: ByteString -> Grammar Word8
-buildGrammar raw =
-  --uncurry Grammar $ iter (Proxy :: Proxy Max) (uncurry step) $ toVector raw
-  undefined
-
+--Recursively replace NonTerms by their entry in the dictionary
 inflateGrammar :: Grammar Word8 -> ByteString
-inflateGrammar = undefined
+inflateGrammar (Grammar (Rules rules) line) = B.fromList $ recurse lookup (fromLine line)
+  where
+  vector = V.fromList rules
+  lookup :: Node Word8 -> Either Word8 [Node Word8]
+  lookup (Term word) = word
+  lookup (NonTerm n) = fromLine $ vector V.! n
+
+recurse :: (b -> Either a [b]) -> [b] -> [a]
+recurse f = concatMap (either pure (recurse f))
