@@ -6,6 +6,7 @@ import Test.QuickCheck
 
 import Grammar
 import GrammarTest
+import BuildGrammarTest
 
 main :: IO ()
 main = defaultMain tests
@@ -16,6 +17,7 @@ tests = [ testGroup "Sorting Group 1"
           ]
         , testGroup "Real Group"
           [ grammarTests
+          , testProperty "inflate is build's inverse" areInverses
           ]
         ]
 

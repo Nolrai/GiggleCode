@@ -10,6 +10,9 @@ import Data.Word
 import Data.MultiSet as M
 import Data.List as L
 import qualified Data.Vector as V
+import Data.Function (on)
+import Control.Arrow (second)
+import Control.Monad (foldM)
 
 {- step
  - stepNumber the step this is, counting from the inside out.
@@ -17,35 +20,42 @@ import qualified Data.Vector as V
  -          If Right, then build a multi set of pairs, and encode the one that occurse the most.
  - -}
 
-step :: Int -> Either (Rules Word8, [Node Word8]) -> Either (Rules Word8, [Node Word8])
-step _ result@(Left _) = result
-step stepNumber (Right input@(rules, list)) = if maxOccurs > 1 then Right (newRules, newList) else Left input
+type ShortCircuit a = Either a a
+
+step :: Int -> (Rules Word8, [Node Word8]) -> ShortCircuit (Rules Word8, [Node Word8])
+step stepNumber input@(rules, list) = if maxOccurs > 1 then return (newRules, newList) else throwE input
   where
   (multiSet, newList, _) = foldl' microStep (mempty, mempty, Nothing) list
-  (newLine, maxOccurs) = L.maximumBy (compare `on` snd) $ M.toOccursList ms
+  (newLine, maxOccurs) = L.maximumBy (compare `on` snd) $ M.toOccurList multiSet
   newRules = Rules newLine rules
   microStep :: (MultiSet (Word8, Word8), [Node Word8], Maybe Word8) -> Node Word8 -> (MultiSet (Word8, Word8), [Node Word8], Maybe Word8)
   microStep (multiSet', newList', Nothing) b = (multiSet', newList', Just b)
   microStep (multiSet', newList', Just b) a =
     let ab' =
-        if (a,b) == newLine then NonTerminal stepNumber in --uses lazyness, make sure that newLine doesn't depend on newList
-    ( insert (a,b) multiSet
-    , ab' : tail newList'
+              if (a,b) == newLine
+              then [Nonterm stepNumber]
+              else [a,b] in --uses lazyness, make sure that newLine doesn't depend on newList
+    (M.insert (a,b) multiSet
+    , ab' ++ tail newList'
     , Just a --Can't depend on newLine or we get infinite loop.
     )
 
+runShortCircuitSteps :: (Int -> a -> ShortCircuit a) -> Int -> a -> a
+runShortCircuitSteps singleStep maxSteps start
+  = either id id $ foldM singleStep start [0 .. maxSteps]
+
 buildGrammar :: Int -> ByteString -> Grammar Word8
-buildGrammar maxSteps raw =
-  uncurry Grammar . second toLine . either id id $ foldr step (Rules [], map Term toList raw) [maxSteps, maxSteps-1 .. 0]
+buildGrammar maxSize raw =
+  uncurry Grammar . second toLine $ runShortCircuitSteps step maxSize (Rules [], Term `fmap` B.unpack raw)
 
 --Recursively replace NonTerms by their entry in the dictionary
 inflateGrammar :: Grammar Word8 -> ByteString
-inflateGrammar (Grammar (Rules rules) line) = B.fromList $ recurse lookup (fromLine line)
+inflateGrammar (Grammar (Rules rules) line) = B.pack $ recurse lookup (fromLine line)
   where
   vector = V.fromList rules
   lookup :: Node Word8 -> Either Word8 [Node Word8]
   lookup (Term word) = word
-  lookup (NonTerm n) = fromLine $ vector V.! n
+  lookup (Nonterm n) = fromLine $ vector V.! n
 
-recurse :: (b -> Either a [b]) -> [b] -> [a]
-recurse f = concatMap (either pure (recurse f))
+recurse :: Monad m => (b -> Either a (m b)) -> m b -> m a
+recurse f = ( (either pure (recurse f)) >>=)

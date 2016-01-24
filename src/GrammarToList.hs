@@ -18,7 +18,6 @@ grammarToList (Grammar l r) =
       case acc of
       [] -> x
       xs -> x ++ (Nothing : xs)
-  sepByNothing x xs = map Just x ++  (Nothing  : xs)
   l' :: [Node a]
   l' = lineToList l
   r' :: [[Node a]]

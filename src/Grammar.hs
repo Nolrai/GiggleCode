@@ -5,6 +5,8 @@ module Grammar
     , Line (..)
     , Rules (..)
     , Node (..)
+    , fromLine
+    , toLine
     , verifyGrammar
     , verifyRules
     , verifyLine
@@ -25,8 +27,9 @@ data Node t = Term t | Nonterm Natural
 data Line t = Line (Node t) (Node t)  [(Node t)]
   deriving (Eq, Ord, Show, Read, Generic)
 
-lineToList (Line a b rest) = a : b : rest
-
+fromLine (Line a b rest) = a : b : rest
+toLine (a:b:rest) = Line a b rest
+toLine x = error $ show x ++ " is too short to become a line"
 
 -- A dictionary, or "Rules" is a list of lines.
 newtype Rules t = Rules [Line t]
@@ -54,7 +57,7 @@ verifyRules (Rules l) =
   return (length u)
 
 -- Verify that none of the nodes in this line refer to a line above n.
-verifyLine n l = P.mapM_ (verifyNode n) (lineToList l)
+verifyLine n l = P.mapM_ (verifyNode n) (fromLine l)
 
 --"verifyNode n node" make sure "node" only referes to lines below, (n or less).
 verifyNode _ (Term t) = return ()
