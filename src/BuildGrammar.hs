@@ -16,19 +16,29 @@ import Control.Monad (foldM)
 
 {- step
  - stepNumber the step this is, counting from the inside out.
- - result : If Left then there are no repeated pairs left to encode, so shortcircut.
+ - result : If Left then there are no repeated pairs left to encode, so we are done.
  -          If Right, then build a multi set of pairs, and encode the one that occurse the most.
  - -}
 
 type ShortCircuit a = Either a a
+type Pair a = (a, a)
+
+runShortCircuit :: ShortCircuit a -> a
+runShortCircuit = either id id
+
+done :: ShortCircuit a
+done a = Left a
 
 step :: Int -> (Rules Word8, [Node Word8]) -> ShortCircuit (Rules Word8, [Node Word8])
-step stepNumber input@(rules, list) = if maxOccurs > 1 then return (newRules, newList) else throwE input
+step stepNumber input@(rules, list) = if maxOccurs > 1 then return (newRules, newList) else done input
   where
+  multiSet :: MultiSet (Pair (Node Word8))
+  newList :: [Node Word8]
   (multiSet, newList, _) = foldl' microStep (mempty, mempty, Nothing) list
+  newLine :: Pair (Node Word8)
   (newLine, maxOccurs) = L.maximumBy (compare `on` snd) $ M.toOccurList multiSet
   newRules = Rules newLine rules
-  microStep :: (MultiSet (Word8, Word8), [Node Word8], Maybe Word8) -> Node Word8 -> (MultiSet (Word8, Word8), [Node Word8], Maybe Word8)
+  microStep :: (MultiSet (Pair (Node Word8)), [Node Word8], Maybe Word8) -> Node Word8 -> (MultiSet (Pair (Node Word8)), [Node Word8], Maybe Word8)
   microStep (multiSet', newList', Nothing) b = (multiSet', newList', Just b)
   microStep (multiSet', newList', Just b) a =
     let ab' =
@@ -42,7 +52,7 @@ step stepNumber input@(rules, list) = if maxOccurs > 1 then return (newRules, ne
 
 runShortCircuitSteps :: (Int -> a -> ShortCircuit a) -> Int -> a -> a
 runShortCircuitSteps singleStep maxSteps start
-  = either id id $ foldM singleStep start [0 .. maxSteps]
+  = runShortCircuit $ foldM singleStep start [0 .. maxSteps]
 
 buildGrammar :: Int -> ByteString -> Grammar Word8
 buildGrammar maxSize raw =
@@ -50,12 +60,17 @@ buildGrammar maxSize raw =
 
 --Recursively replace NonTerms by their entry in the dictionary
 inflateGrammar :: Grammar Word8 -> ByteString
-inflateGrammar (Grammar (Rules rules) line) = B.pack $ recurse lookup (fromLine line)
+inflateGrammar (Grammar (Rules rules) line) = B.pack . recurse lookup $ (fromLine line)
   where
   vector = V.fromList rules
   lookup :: Node Word8 -> Either Word8 [Node Word8]
   lookup (Term word) = word
-  lookup (Nonterm n) = fromLine $ vector V.! n
+  lookup (Nonterm n) = fromLine $ vector V.! (fromIntegral n)
 
-recurse :: Monad m => (b -> Either a (m b)) -> m b -> m a
-recurse f = ( (either pure (recurse f)) >>=)
+recurse :: (a -> Either b [a]) -> [a] -> [b]
+recurse f = go where
+  go :: [a] -> [b]
+  go = concatMap g
+  g :: a -> [b]
+  g a = either pure go (f a)
+
