@@ -1,4 +1,4 @@
-
+{-# LANGUAGE ScopedTypeVariables #-}
 module BuildGrammar
     ( buildGrammar
     , inflateGrammar
@@ -26,7 +26,7 @@ type Pair a = (a, a)
 runShortCircuit :: ShortCircuit a -> a
 runShortCircuit = either id id
 
-done :: ShortCircuit a
+done :: a -> ShortCircuit a
 done a = Left a
 
 step :: Int -> (Rules Word8, [Node Word8]) -> ShortCircuit (Rules Word8, [Node Word8])
@@ -36,9 +36,11 @@ step stepNumber input@(rules, list) = if maxOccurs > 1 then return (newRules, ne
   newList :: [Node Word8]
   (multiSet, newList, _) = foldl' microStep (mempty, mempty, Nothing) list
   newLine :: Pair (Node Word8)
+  maxOccurs :: Int
   (newLine, maxOccurs) = L.maximumBy (compare `on` snd) $ M.toOccurList multiSet
-  newRules = Rules newLine rules
-  microStep :: (MultiSet (Pair (Node Word8)), [Node Word8], Maybe Word8) -> Node Word8 -> (MultiSet (Pair (Node Word8)), [Node Word8], Maybe Word8)
+  newRules :: Rules Word8
+  newRules = addRule (pairToLine newLine) rules
+  microStep :: (MultiSet (Pair (Node Word8)), [Node Word8], Maybe (Node Word8)) -> Node Word8 -> (MultiSet (Pair (Node Word8)), [Node Word8], Maybe (Node Word8))
   microStep (multiSet', newList', Nothing) b = (multiSet', newList', Just b)
   microStep (multiSet', newList', Just b) a =
     let ab' =
@@ -67,10 +69,10 @@ inflateGrammar (Grammar (Rules rules) line) = B.pack . recurse lookup $ (fromLin
   lookup (Term word) = word
   lookup (Nonterm n) = fromLine $ vector V.! (fromIntegral n)
 
-recurse :: (a -> Either b [a]) -> [a] -> [b]
+recurse :: forall a b. (a -> Either b [a]) -> [a] -> [b]
 recurse f = go where
   go :: [a] -> [b]
-  go = concatMap g
+  go = (>>= g)
   g :: a -> [b]
   g a = either pure go (f a)
 

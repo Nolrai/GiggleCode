@@ -1,12 +1,14 @@
 {-# LANGUAGE StandaloneDeriving, GADTSyntax, DeriveGeneric #-}
-
+{-# GHC Wall #-}
 module Grammar
     ( Grammar (..)
     , Line (..)
     , Rules (..)
+    , addRule
     , Node (..)
     , fromLine
     , toLine
+    , pairToLine
     , verifyGrammar
     , verifyRules
     , verifyLine
@@ -30,10 +32,13 @@ data Line t = Line (Node t) (Node t)  [(Node t)]
 fromLine (Line a b rest) = a : b : rest
 toLine (a:b:rest) = Line a b rest
 toLine x = error $ show x ++ " is too short to become a line"
+pairToLine (a,b) = Line a b []
 
 -- A dictionary, or "Rules" is a list of lines.
 newtype Rules t = Rules [Line t]
   deriving (Eq, Ord, Show, Read, Generic)
+
+addRule new (Rules rules) = Rules (new : rules) 
 
 -- A complete Grammar includes the "start" line as well.
 --   Usually that will be much larger then the resT.
