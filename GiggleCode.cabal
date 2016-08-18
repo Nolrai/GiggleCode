@@ -1,13 +1,13 @@
-name:                Compress
+name:                GiggleCode
 version:             0.1.0.0
-synopsis:            Initial project template from stack, using test-framework with QuickCheck
+synopsis:            Initial project template from stack, using hspec and quickcheck
 description:         Please see README.md
-homepage:            http://github.com/Nolrai/Compress#readme
+homepage:            https://github.com/Nolrai/GiggleCode#readme
 license:             BSD3
 license-file:        LICENSE
 author:              Christopher A. Upshaw
 maintainer:          chrisaupshaw@gmail.com
-copyright:            2015 Chris A. Upshaw
+copyright:           2016 Christopher A. Upshaw
 category:            Compression
 build-type:          Simple
 -- extra-source-files:
@@ -16,7 +16,7 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Lib
-  other-modules:       BuildGrammar
+                     , BuildGrammar
                      , Grammar
                      , GrammarToList
                      , PadicEncode
@@ -27,27 +27,25 @@ library
                      , vector
   default-language:    Haskell2010
 
-executable Compress-exe
+executable GiggleCode
   hs-source-dirs:      app
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
-                     , Compress
+                     , GiggleCode
   default-language:    Haskell2010
 
-test-suite Compress-test
+test-suite GiggleCode-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
-                     , src
   main-is:             Spec.hs
   build-depends:       base
-                     , Compress
-                     , test-framework
-                     , test-framework-quickcheck2
+                     , GiggleCode
+                     , hspec
                      , QuickCheck
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
 source-repository head
   type:     git
-  location: https://github.com/Nolrai/Compress
+  location: https://github.com/Nolrai/GiggleCode

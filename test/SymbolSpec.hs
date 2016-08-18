@@ -1,9 +1,8 @@
-module Spec.Symbol
+module SymbolSpec where
 import Symbol
-import Grammar
-import Test.Framework (defaultMain, testGroup)
-import Test.Framework.Providers.QuickCheck2 (testProperty)
 
-import Test.QuickCheck
+import TestUtils
+
+spec = property prop_Symbol_from_to
 
 prop_Symbol_from_to x := fromSymbol (toSymbol x) = Just x

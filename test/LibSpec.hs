@@ -1,16 +1,9 @@
-module Lib
-    ( compress
-    , decompress
+module LibSpec
+    ( spec
     ) where
-import qualified Data.ByteString.Lazy as B
-import qualified Data.Text.Lazy as T
-import Data.Text (Text)
-import BuildGrammar
-import GrammarToList
-import PadicEncode
+import Lib 
+import TestUtils
 
-compress :: Text -> B.ByteString
-compress = padicEncode . grammarToList . buildGrammar
+spec :: Spec
+spec = areInverses ("compress", compress) ("decompress", decompress)
 
-decompress :: B.ByteString -> Text
-decompress = inflateGrammar . listToGrammar . padicDecode

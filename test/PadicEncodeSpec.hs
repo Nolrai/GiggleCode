@@ -1,8 +1,10 @@
-module PadicEncode
-    ( padicEncode
-    , padicDecode
+module PadicEncodeSpec
+    ( spec
     ) where
 
-padicEncode = undefined
-padicDecode = undefined
+import PadicEncode (encode, decode)
+import TestUtils
+
+spec :: Spec
+spec = areInverses ("Padic encode", encode) ("Padic decode", decode)
 
