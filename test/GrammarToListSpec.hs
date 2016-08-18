@@ -7,6 +7,7 @@ import GrammarToList
     , listToGrammar
     )
 import TestUtils
+import SymbolSpec ()
 
 spec :: Spec
 spec = 

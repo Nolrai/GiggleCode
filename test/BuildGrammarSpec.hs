@@ -3,5 +3,6 @@ module BuildGrammarSpec
      where
 import BuildGrammar
 import TestUtils
+import GrammarSpec ()
 
-spec = areInverses ("build", buildGrammar) ("inflate", inflateGrammer) 
+spec = areInverses ("build", buildGrammar) ("inflate", inflateGrammar) 

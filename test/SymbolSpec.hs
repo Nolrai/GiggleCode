@@ -1,8 +1,14 @@
+{-# LANGUAGE StandaloneDeriving, GeneralizedNewtypeDeriving #-}
 module SymbolSpec where
 import Symbol
 
 import TestUtils
+import Test.QuickCheck (property, Arbitrary)
+import GrammarSpec
 
-spec = property prop_Symbol_from_to
+deriving instance Arbitrary Symbol
 
-prop_Symbol_from_to x := fromSymbol (toSymbol x) = Just x
+spec :: Spec
+spec = describe "fromSymbol" $ it "undoes toSymbol" $ property prop_Symbol_from_to
+
+prop_Symbol_from_to x = fromSymbol (toSymbol x) == Just x
