@@ -2,7 +2,7 @@ module BuildGrammar
     ( buildGrammar
     , inflateGrammar
     ) where
-import qualified Data.Text as T
+import qualified Data.Text.Lazy as T
 import Grammar
 
 buildGrammar :: T.Text -> Grammar

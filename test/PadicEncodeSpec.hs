@@ -6,7 +6,7 @@ import PadicEncode
 import TestUtils
 import qualified Data.Vector as V
 import qualified Data.ByteString.Lazy as B
-import Test.QuickCheck (Arbitrary)
+import Test.QuickCheck ()
 
 type TestType = Char
 

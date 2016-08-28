@@ -5,7 +5,7 @@ module PadicEncode
     ) where
 
 import Data.Vector
-import qualified Data.ByteString.Lazy as B
+import qualified B
 
 encode :: Ord a => Vector a -> B.ByteString
 decode :: Ord a => B.ByteString -> Vector a

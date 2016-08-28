@@ -4,11 +4,13 @@ import Symbol
 
 import TestUtils
 import Test.QuickCheck (property, Arbitrary)
-import GrammarSpec
+import GrammarSpec ()
+import Grammar
 
 deriving instance Arbitrary Symbol
 
 spec :: Spec
 spec = describe "fromSymbol" $ it "undoes toSymbol" $ property prop_Symbol_from_to
 
+prop_Symbol_from_to :: Node -> Bool 
 prop_Symbol_from_to x = fromSymbol (toSymbol x) == Just x
