@@ -36,12 +36,12 @@ spec :: Spec
 spec =
   do
   areInverses
+    ("mkValid", mkValid)
+    ("unValid", unValid)
+  areInverses
                       -- It's important that its Valid/fromValid and NOT mkValid/unValid
                       ---  because we are just using Valid to over write the 
                       --   Arbitrary instance. (which is what mkValid and unValid are for)
     ("grammarToList", gltest)
     ("listToGrammar", lgtest)
-  areInverses
-    ("mkValid", mkValid)
-    ("unValid", unValid)
   

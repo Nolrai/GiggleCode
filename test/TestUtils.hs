@@ -40,8 +40,8 @@ isInverseOf
 isInverseOf (fname, f) (gname, g) =
   describe fname $ it ("undoes " ++ gname) $ property (isId (g .> f))
 
-isId :: Eq a => (a -> a) -> a -> Bool
-isId f x = f x == x
+isId :: (Eq a, Show a) => (a -> a) -> a -> Expectation
+isId f x = f x `shouldBe` x
 
 (.>) :: (a -> b) -> (b -> c) -> a -> c
 f .> g = g . f
