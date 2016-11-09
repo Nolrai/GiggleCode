@@ -16,26 +16,26 @@ instance Arbitrary B.ByteString where
   shrink = L.map B.pack . shrink . B.unpack
 
 instance Arbitrary a => Arbitrary (V.Vector a) where
-  arbitrary = 
+  arbitrary =
     do
     n <- arbitrarySizedNatural
     V.replicateM n arbitrary
   shrink = L.map V.fromList . shrinkList shrink . V.toList
 
-areInverses 
-  :: (Arbitrary a, Arbitrary b, Show a, Show b, Eq a, Eq b) 
-  => (String, (a -> b)) 
-  -> (String, (b -> a)) 
+areInverses
+  :: (Arbitrary a, Arbitrary b, Show a, Show b, Eq a, Eq b)
+  => (String, (a -> b))
+  -> (String, (b -> a))
   -> Spec
 areInverses (fname, f) (gname, g) =
   do
   (fname, f) `isInverseOf` (gname, g)
   (gname, g) `isInverseOf` (fname, f)
 
-isInverseOf 
-  :: (Arbitrary a, Arbitrary b, Show a, Show b, Eq a, Eq b) 
-  => (String, (a -> b)) 
-  -> (String, (b -> a)) 
+isInverseOf
+  :: (Arbitrary a, Arbitrary b, Show a, Show b, Eq a, Eq b)
+  => (String, (a -> b))
+  -> (String, (b -> a))
   -> Spec
 isInverseOf (fname, f) (gname, g) =
   describe fname $ it ("undoes " ++ gname) $ property (isId (g .> f))

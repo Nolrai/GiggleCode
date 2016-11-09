@@ -6,7 +6,6 @@ module Grammar
     , Term (..)
     ) where
 import Data.Vector (Vector)
-import qualified Data.Vector as V
 
 newtype Term = Term {toChar :: Char}
   deriving (Read, Show, Eq, Ord)

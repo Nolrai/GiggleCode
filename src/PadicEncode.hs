@@ -1,7 +1,6 @@
 module PadicEncode
     ( encode
     , decode
-    , module B
     ) where
 
 import Data.Vector

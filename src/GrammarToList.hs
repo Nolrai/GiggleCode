@@ -5,27 +5,19 @@ module GrammarToList
 import qualified Data.Vector as V
 import Data.Vector (Vector, empty, cons, snoc)
 import Grammar
-import Symbol
-import Debug.Trace
+import Symbol as S
+--import Debug.Trace
 
 grammarToList :: Grammar -> Vector Symbol
-grammarToList = V.concatMap ( (Symbol Nothing `cons`) . (toSymbol `fmap`))
+grammarToList = V.concatMap ((endline `cons`) . (toSymbol `fmap`))
 
 listToGrammar :: Vector Symbol -> Grammar
-listToGrammar vec =
-  case V.foldr goT (empty, empty) vec of
-  (l,g) -> if null l then g else snd $ goT (Symbol Nothing) (l,g)
+listToGrammar vec = go vec empty
 
-goT x = trace ("goT :" ++ show x) (go x)
-
-go :: Symbol -> (Line, Grammar) -> (Line, Grammar)
-go s (l, g) = goT' (fromSymbol s)
-  where
-  goT' x = trace ("go' :" ++ show x) (go' x)
-  go' Nothing = --Push the finished line
-      ( empty
-      , l `cons` g)
-
-  go' (Just n) = -- Add the Node to the current line
-      ( n `cons` l
-      , g)
+go :: Vector Symbol -> Grammar -> Grammar
+go vec so_far =
+  if V.null vec
+    then so_far
+    else
+      let (line, rest) = breakAtEndline vec
+      in go (V.drop 1 rest) (so_far `snoc` line)

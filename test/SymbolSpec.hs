@@ -3,14 +3,18 @@ module SymbolSpec where
 import Symbol
 
 import TestUtils
-import Test.QuickCheck (property, Arbitrary)
+import Test.QuickCheck (property, Arbitrary, (==>))
 import GrammarSpec ()
-import Grammar
+import Grammar ()
 
 deriving instance Arbitrary Symbol
 
-spec :: Spec
-spec = describe "fromSymbol" $ it "undoes toSymbol" $ property prop_Symbol_from_to
+isValue :: Eq a => a -> Bool
+isValue x = if x == x then True else (error "isValue: x == x is false.")
 
-prop_Symbol_from_to :: Node -> Bool 
-prop_Symbol_from_to x = fromSymbol (toSymbol x) == Just x
+spec :: Spec
+spec =
+  do
+  isInverseOf ("unsafeToNode", unsafeToNode) ("toSymbol", toSymbol)
+  it "isNode allows unsafeToNode" $ property (\ x  -> isNode x ==> isValue (unsafeToNode x) )
+  areInverses ("breakAtEndline", breakAtEndline) ("unBreakAtEndline", unBreakAtEndline)
