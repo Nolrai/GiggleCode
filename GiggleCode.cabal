@@ -55,6 +55,7 @@ test-suite GiggleCode-test
                      , GiggleCode
                      , hspec
                      , QuickCheck
+                     , deepseq
 
   other-modules:       B
                      , BuildGrammarSpec
