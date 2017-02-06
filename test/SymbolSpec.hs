@@ -1,9 +1,9 @@
 {-# LANGUAGE StandaloneDeriving, DeriveGeneric, GeneralizedNewtypeDeriving #-}
-module SymbolSpec where
+module SymbolSpec (spec) where
 import Symbol
 
 import TestUtils
-import Test.QuickCheck (property, Property, Arbitrary(..), (==>), shrink, genericShrink)
+import Test.QuickCheck (property, Property, Arbitrary(..))
 import Test.QuickCheck.Exception (tryEvaluate, discard)
 import Test.QuickCheck.Monadic (monadicIO, pre, run)
 import qualified Test.QuickCheck.Monadic as M
@@ -12,14 +12,14 @@ import Grammar (Node)
 import qualified Data.Vector as V
 import Data.Vector (Vector)
 import qualified Control.Exception as E
-import Control.Applicative ((<$>),(<*>))
+import Control.Applicative ((<$>),)
 import GHC.Generics
-import Control.DeepSeq (force)
 
 deriving instance Arbitrary Symbol
 
-isLeft (Left _) = True
-isLeft (Right _) = False
+isRight :: Either a b -> Bool
+isRight (Left _) = False
+isRight (Right _) = True
 
 spec :: Spec
 spec =
@@ -41,20 +41,22 @@ spec =
   testIsNodeUnsafeToNode x = monadicIO
     $ do
       (pre . isNode) x
-      r <- (run . tryExecute . unsafeToNode) x
-      (M.assert . isLeft) r
+      r <- run . tryEvaluate . unsafeToNode $ x
+      M.assert . isRight $ r
 
 instance Arbitrary Valid where
   arbitrary = discardInvalid <$> arbitrary
-  shrink v = map discardInvalid . shrink
+  shrink (Valid v) = discardInvalid <$> shrink v
 
+discardInvalid :: Vector Symbol -> Valid
 discardInvalid v =
-  if all (/= endline) v
+  if V.all (/= endline) v
     then discard
     else Valid v
 
 data Valid = Valid {fromValid :: Vector Symbol}
   deriving (Show, Eq, Generic)
 
+unsafeMkValid :: Vector Symbol -> Valid
 unsafeMkValid vec =
   E.assert (any (== endline) vec) $ Valid vec
