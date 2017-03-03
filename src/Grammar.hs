@@ -1,19 +1,18 @@
 module Grammar
-    ( Grammar
-    , Line
+    ( Grammar (..)
+    , Line 
     , NonTerm (..)
     , Node (..)
     , Term (..)
     ) where
 import Data.Vector (Vector)
 
-newtype Term = Term {toChar :: Char}
-  deriving (Read, Show, Eq, Ord)
-newtype NonTerm = NonTerm {name :: Int}
-  deriving (Read, Show, Eq, Ord)
-newtype Node = Node (Either NonTerm Term)
+type Term = Char
+type NonTerm = Int
+
+data Node = TermNode Term | NonTermNode NonTerm
   deriving (Read, Show, Eq, Ord)
 
 type Line = Vector Node
 
-type Grammar = Vector Line
+data Grammar = Grammar Line (Vector Line)

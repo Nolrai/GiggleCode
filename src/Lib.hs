@@ -7,9 +7,9 @@ import qualified T
 import BuildGrammar
 import GrammarToList
 import PadicEncode
+import Control.Monad
+import Control.Monad.Exception
 
-compress :: T.Text -> B.ByteString
-compress = encode . grammarToList . buildGrammar
+compress = encode <=< grammarToList <=< buildGrammar
 
-decompress :: B.ByteString -> T.Text
-decompress = inflateGrammar . listToGrammar . decode
+decompress = inflateGrammar <=< listToGrammar <=< decode
