@@ -1,4 +1,8 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE
+   FlexibleContexts
+ , FlexibleInstances
+ , MultiParamTypeClasses
+  #-}
 module Symbol
     ( Symbol (..)
     , toSymbol
@@ -16,6 +20,7 @@ import Data.Vector (Vector)
 import qualified Data.Vector as V
 import Data.Maybe (isJust)
 import Control.Monad.Exception
+import Utils
 
 -- The Nothing value is used to seperate lines
 newtype Symbol = Symbol (Maybe Node)
@@ -40,6 +45,10 @@ data UnsafeToNodeEndline = UnsafeToNodeEndline
   deriving (Show)
 
 instance Exception UnsafeToNodeEndline where
+  toException = giggleCodeExceptionToException
+  fromException = giggleCodeExceptionFromException
+
+instance Throws UnsafeToNodeEndline (Caught GiggleCodeException l)
 
 -- breakAtEndline takes a vector of Symbols and breaks off the prefix
 --   of 'Just x's and converts them to a vector of nodes.
@@ -67,6 +76,10 @@ data TailVEmptyVector = TailVEmptyVector
   deriving (Show)
 
 instance Exception TailVEmptyVector where
+  toException = giggleCodeExceptionToException
+  fromException = giggleCodeExceptionFromException
+
+instance Throws TailVEmptyVector (Caught GiggleCodeException l)
 
 instance Show Symbol where
   show (Symbol s) =

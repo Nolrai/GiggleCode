@@ -1,35 +1,43 @@
-{-# LANGUAGE TypeOperators, ViewPatterns #-}
+{-# LANGUAGE
+   FlexibleContexts
+ , FlexibleInstances
+ , MultiParamTypeClasses
+  #-}
 module BuildGrammar
     ( buildGrammar
     , inflateGrammar
     ) where
 import qualified Data.Text.Lazy as T
-import Grammar
-import Control.Arrow ((+++))
+import Grammar (Grammar(..), Node(..), Term, NonTerm, Line)
 import Data.Vector
 import Control.Monad.Exception
 import qualified Data.Vector as V
+import Utils
 
-buildGrammar = undefined
+buildGrammar :: (Throws Stub l) => T.Text -> EM l Grammar
+buildGrammar = stub
 
-inflateGrammar (uncons -> (main, rules)) =
-  lineToText <$> V.mapM (lookupNode rules) main
-inflateGrammar _ = throw EmptyGrammar
+inflateGrammar :: (Throws InvalidNonTerm l) => Grammar -> EM l T.Text
+inflateGrammar (Grammar main rules) =
+  lineToText <$> lookupNode rules main
 
-lookupNode rules = (\n -> rules !! n) +++ return
+lookupNode :: (Throws InvalidNonTerm l) => Vector Line -> Line -> EM l (Vector Term)
+lookupNode rules main = V.sequence (go =<< main)
+  where
+  go :: (Throws InvalidNonTerm l) => Node -> Vector (EM l Term)
+  go (NonTermNode n)
+    | n < V.length rules = go =<< (rules ! n)
+    | otherwise = pure (throw $ InvalidNonTerm n)
+  go (TermNode n) = pure (pure n)
 
-lineToText = T.pack . V.toList <$> V.mapM nodeToText
+lineToText :: Vector Term -> T.Text
+lineToText = T.pack . V.toList
 
-nodeToText (TermNode a) = return a
-nodeToText (NonTermNode b) = throw UnreplacedNonTerm
-
-data UnreplacedNonTerm = UnreplacedNonTerm
+data InvalidNonTerm = InvalidNonTerm NonTerm
   deriving (Show)
 
-instance Exception UnreplacedNonTerm
+instance Exception InvalidNonTerm where
+  toException = giggleCodeExceptionToException
+  fromException = giggleCodeExceptionFromException
 
-data EmptyGrammar = EmptyGrammar
-  deriving (Show)
-
-instance Exception EmptyGrammar
-
+instance Throws InvalidNonTerm (Caught GiggleCodeException l)
