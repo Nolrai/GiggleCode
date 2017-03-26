@@ -6,7 +6,7 @@ import Lib
 import Data.Text.Lazy as T
 import Data.Text.Lazy.IO as T
 import Data.ByteString.Lazy as B
-import Prelude (IO, FilePath, Either(..), ($), (.))
+import Prelude (IO, FilePath, Either(..), ($), (.), String, (++))
 import Control.Applicative (pure, (<$>))
 import System.Environment (getArgs)
 import Control.Monad.Exception
@@ -17,10 +17,12 @@ main :: IO ()
 main =
   do
   [flag, src, dst] <- getArgs
-  f <- case flag of
-    "-c" -> body compress
-    "-d" -> body decompress
-  f src dst
+  f flag src dst
+  where
+  f :: String -> FilePath -> FilePath -> IO ()
+  f "-c" = body compress
+  f "-d" = body decompress
+  f _ = \ _ _ -> die "unrecognized flag"
 
 body :: (File a, File b, NFData b) => (a -> EMG b) -> FilePath -> FilePath -> IO ()
 body f src dst =

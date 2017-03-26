@@ -1,9 +1,9 @@
 module Grammar
     ( Grammar (..)
-    , Line 
-    , NonTerm (..)
+    , Line
+    , NonTerm
     , Node (..)
-    , Term (..)
+    , Term
     ) where
 import Data.Vector (Vector)
 
