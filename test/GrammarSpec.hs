@@ -1,12 +1,18 @@
-{-# LANGUAGE StandaloneDeriving, GeneralizedNewtypeDeriving #-}
-module GrammarSpec where
-import Test.QuickCheck (Arbitrary)
-import Grammar
-import Test.Hspec
+{-# LANGUAGE TypeApplications, DeriveAnyClass, TypeSynonymInstances, FlexibleInstances, StandaloneDeriving #-}
+module GrammarSpec (module Grammar, spec) where
+import Test.QuickCheck
+import Grammar (Grammar(..), Node(..), Term, NonTerm)
+import TestUtils (Spec)
+import Control.Applicative ((<$>))
 
 spec :: Spec
 spec = return ()
 
-deriving instance Arbitrary NonTerm
-deriving instance Arbitrary Term
-deriving instance Arbitrary Node
+instance Arbitrary Node where
+  arbitrary = oneof [TermNode <$> arbitrary, NonTermNode <$> arbitrary]
+
+instance Arbitrary Grammar where
+  arbitrary = Grammar <$> arbitrary <*> arbitrary
+  shrink (Grammar a b) = drop 1 $ Grammar <$> shrink' a <*> shrink' b
+    where
+      shrink' x = x : shrink x

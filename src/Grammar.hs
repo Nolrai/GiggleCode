@@ -16,3 +16,4 @@ data Node = TermNode Term | NonTermNode NonTerm
 type Line = Vector Node
 
 data Grammar = Grammar Line (Vector Line)
+  deriving (Read, Show, Eq, Ord)

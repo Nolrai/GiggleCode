@@ -1,4 +1,5 @@
-module TestUtils (module Test.Hspec, areInverses, isInverseOf) where
+{-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
+module TestUtils (module Test.Hspec, areInverses, isInverseOf, (.>)) where
 
 import Data.List as L
 import Test.Hspec
@@ -6,6 +7,8 @@ import Test.QuickCheck
 import qualified B
 import qualified T
 import qualified Data.Vector as V
+import Control.Monad.Exception
+import Control.Monad ((>=>))
 
 instance Arbitrary T.Text where
   arbitrary = T.pack `fmap` arbitrary
@@ -22,10 +25,12 @@ instance Arbitrary a => Arbitrary (V.Vector a) where
     V.replicateM n arbitrary
   shrink = L.map V.fromList . shrinkList shrink . V.toList
 
+type EMSE = EM AnyException
+
 areInverses
   :: (Arbitrary a, Arbitrary b, Show a, Show b, Eq a, Eq b)
-  => (String, (a -> b))
-  -> (String, (b -> a))
+  => (String, (a -> EMSE b))
+  -> (String, (b -> EMSE a))
   -> Spec
 areInverses (fname, f) (gname, g) =
   do
@@ -34,14 +39,17 @@ areInverses (fname, f) (gname, g) =
 
 isInverseOf
   :: (Arbitrary a, Arbitrary b, Show a, Show b, Eq a, Eq b)
-  => (String, (a -> b))
-  -> (String, (b -> a))
+  => (String, (a -> EMSE b))
+  -> (String, (b -> EMSE a))
   -> Spec
 isInverseOf (fname, f) (gname, g) =
-  describe fname $ it ("undoes " ++ gname) $ property (isId (g .> f))
+  describe fname $ it ("undoes " ++ gname) $ property (isId (g >=> f))
 
-isId :: (Eq a, Show a) => (a -> a) -> a -> Expectation
-isId f x = f x `shouldBe` x
+isId :: (Eq a, Show a) => (a -> EMSE a) -> a -> Expectation
+isId f x =
+  case tryEMWithLoc $ shouldBe x <$> f x of
+    Right expectation -> expectation
+    Left (trace, e) -> error $ showExceptionWithTrace trace e
 
-(.>) :: (a -> b) -> (b -> c) -> a -> c
+(.>) :: (a -> b) -> (b -> c) -> (a -> c)
 f .> g = g . f
