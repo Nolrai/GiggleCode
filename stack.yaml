@@ -55,5 +55,11 @@ extra-deps:
 - void-0.7.1
 - ghc-paths-0.1.0.9
 - syb-0.7
+- MissingH-1.4.0.1
+- conduit-1.2.9
+- conduit-extra-1.1.15
+- projectroot-0.2.0.1
+- terminal-size-0.3.2.1
+- vty-5.15
 compiler-check: newer-minor
 resolver: ghc-8.0.0

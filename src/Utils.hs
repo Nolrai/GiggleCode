@@ -37,7 +37,7 @@ instance Show GiggleCodeException where
 
 instance Exception GiggleCodeException where
 
-instance Throws GiggleCodeException GiggleCodeException where
+instance Throws GiggleCodeException (Caught GiggleCodeException l) where
 
 giggleCodeExceptionToException :: Exception e => e -> SomeException
 giggleCodeExceptionToException = toException . GiggleCodeException

@@ -26,16 +26,16 @@ spec =
   do
   isInverseOf
     ("unsafeToNode", unsafeToNode)
-    ("toSymbol", toSymbol)
+    ("toSymbol", toSymbol .> return)
   it "isNode allows unsafeToNode"
     $ property testIsNodeUnsafeToNode
   areInverses
     ("breakAtEndline", breakAtEndline')
     ("unBreakAtEndline", unBreakAtEndline')
   where
-  breakAtEndline' :: Valid -> (Vector Node, Vector Symbol)
-  breakAtEndline' = breakAtEndline . fromValid
-  unBreakAtEndline' :: (Vector Node, Vector Symbol) -> Valid
+  breakAtEndline' :: Valid -> EM (Vector Node, Vector Symbol)
+  breakAtEndline' = (return . breakAtEndline) <=< fromValid
+  unBreakAtEndline' :: (Vector Node, Vector Symbol) -> EM Valid
   unBreakAtEndline' = unsafeMkValid . unBreakAtEndline
   testIsNodeUnsafeToNode :: Symbol -> Property
   testIsNodeUnsafeToNode x = monadicIO
