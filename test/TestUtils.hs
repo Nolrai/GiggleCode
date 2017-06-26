@@ -3,8 +3,9 @@
            , MultiParamTypeClasses
            , TypeSynonymInstances
            , FlexibleInstances
+           , ConstraintKinds
  #-}
-module TestUtils (module Test.Hspec, areInverses, isInverseOf, (.>)) where
+module TestUtils (module Test.Hspec, areInverses, isInverseOf, (.>), EMG, (<=<), (>=>)) where
 
 import Data.List as L
 import Utils (EMG)
@@ -14,7 +15,7 @@ import qualified B
 import qualified T
 import qualified Data.Vector as V
 import Control.Monad.Exception
-import Control.Monad ((>=>))
+import Control.Monad ((>=>), (<=<))
 
 instance Arbitrary T.Text where
   arbitrary = T.pack `fmap` arbitrary
@@ -33,29 +34,16 @@ instance Arbitrary a => Arbitrary (V.Vector a) where
 
 type Testible a = (Arbitrary a, Show a, Eq a)
 
-class Linked b b' where
-  toSuper :: (a -> b) -> (a -> b')
-
-instance Linked b b where
-  toSuper f = f
-instance Linked b (EM l b) where
-  toSuper f = f .> pure
-
-areInverses
-  :: ( Testible a, Testible b
-     , Linked a a', Linked b b' 
-     , Linked a' (EMG a), linked b' (EMG b)
-     )
-  => (String, (a -> b'))
-  -> (String, (b -> a'))
+areInverses :: (Testible a, Testible b)
+  => (String, (a -> EMG b))
+  -> (String, (b -> EMG a))
   -> Spec
 areInverses (fname, f) (gname, g) =
   do
-  (fname, toSuper f) `isInverseOf` (gname, toSuper g)
-  (gname, toSuper g) `isInverseOf` (fname, toSuper f)
+  (fname, f) `isInverseOf` (gname, g)
+  (gname, g) `isInverseOf` (fname, f)
 
-isInverseOf
-  :: (Arbitrary a, Arbitrary b, Show a, Show b, Eq a, Eq b)
+isInverseOf :: (Testible a, Testible b)
   => (String, (a -> EMG b))
   -> (String, (b -> EMG a))
   -> Spec

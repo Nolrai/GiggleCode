@@ -1,11 +1,11 @@
-{-# LANGUAGE StandaloneDeriving, DeriveGeneric, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE StandaloneDeriving, DeriveGeneric, GeneralizedNewtypeDeriving, FlexibleContexts #-}
 module SymbolSpec (spec) where
 import Symbol
 
 import TestUtils
 import Test.QuickCheck (property, Property, Arbitrary(..))
-import Test.QuickCheck.Exception (tryEvaluate, discard)
-import Test.QuickCheck.Monadic (monadicIO, pre, run)
+import Test.QuickCheck.Exception (discard)
+import Test.QuickCheck.Monadic (monadicIO, pre)
 import qualified Test.QuickCheck.Monadic as M
 import GrammarSpec ()
 import Grammar (Node)
@@ -14,6 +14,7 @@ import Data.Vector (Vector)
 import qualified Control.Exception as E
 import Control.Applicative ((<$>),)
 import GHC.Generics
+import Control.Monad.Exception
 
 deriving instance Arbitrary Symbol
 
@@ -33,16 +34,16 @@ spec =
     ("breakAtEndline", breakAtEndline')
     ("unBreakAtEndline", unBreakAtEndline')
   where
-  breakAtEndline' :: Valid -> EM (Vector Node, Vector Symbol)
-  breakAtEndline' = (return . breakAtEndline) <=< fromValid
-  unBreakAtEndline' :: (Vector Node, Vector Symbol) -> EM Valid
+  breakAtEndline' :: Valid -> EMG (Vector Node, Vector Symbol)
+  breakAtEndline' = breakAtEndline . fromValid
+  unBreakAtEndline' :: (Vector Node, Vector Symbol) -> EMG Valid
   unBreakAtEndline' = unsafeMkValid . unBreakAtEndline
   testIsNodeUnsafeToNode :: Symbol -> Property
   testIsNodeUnsafeToNode x = monadicIO
     $ do
       (pre . isNode) x
-      r <- run . tryEvaluate . unsafeToNode $ x
-      M.assert . isRight $ r
+      let r = (tryEM . unsafeToNode) x
+      (M.assert . isRight) r
 
 instance Arbitrary Valid where
   arbitrary = discardInvalid <$> arbitrary
@@ -57,6 +58,9 @@ discardInvalid v =
 data Valid = Valid {fromValid :: Vector Symbol}
   deriving (Show, Eq, Generic)
 
-unsafeMkValid :: Vector Symbol -> Valid
-unsafeMkValid vec =
-  E.assert (any (== endline) vec) $ Valid vec
+unsafeMkValid :: Vector Symbol -> EMG Valid
+unsafeMkValid v =
+  if (any (== endline) v)
+    then (E.throw UnsafeToNodeEndline)
+    else pure $ Valid v
+

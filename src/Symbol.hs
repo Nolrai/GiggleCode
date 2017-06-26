@@ -11,7 +11,7 @@ module Symbol
     , breakAtEndline
     , unBreakAtEndline
     , endline
-    , UnsafeToNodeEndline
+    , UnsafeToNodeEndline (..)
     , TailVEmptyVector
     ) where
 
@@ -20,6 +20,7 @@ import Data.Vector (Vector)
 import qualified Data.Vector as V
 import Data.Maybe (isJust)
 import Control.Monad.Exception
+import Data.Monoid ((<>))
 import Utils
 
 -- The Nothing value is used to seperate lines
@@ -90,5 +91,5 @@ instance Show Symbol where
 
 -- Testing only.
 unBreakAtEndline :: (Vector Node, Vector Symbol) -> Vector Symbol
-unBreakAtEndline (line, rest) = (fmap toSymbol line) `mappend` (endline `V.cons` rest)
+unBreakAtEndline (line, rest) = (fmap toSymbol line) <> (endline `V.cons` rest)
 
