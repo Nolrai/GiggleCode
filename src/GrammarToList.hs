@@ -12,7 +12,7 @@ import Control.Monad.Exception
 
 grammarToList :: Monad m => Grammar -> m (Vector Symbol)
 grammarToList (Grammar main rules)
-  = return $ V.concatMap ((endline `cons`) . (toSymbol `fmap`)) (V.cons main rules)
+  = return $ V.concatMap ((endline `cons`) . (toSymbol <$>)) (V.cons main rules)
 
 listToGrammar ::
   ( Throws S.UnsafeToNodeEndline l
@@ -40,8 +40,3 @@ go vec so_far =
       do
       (line, rest) <- breakAtEndline vec
       go rest (so_far `snoc` line)
-
-data UnconsOnEmptyVector = UnconsOnEmptyVector
-  deriving (Show)
-
-instance Exception UnconsOnEmptyVector where

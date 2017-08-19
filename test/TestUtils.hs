@@ -44,8 +44,8 @@ areInverses (fname, f) (gname, g) =
   (gname, g) `isInverseOf` (fname, f)
 
 isInverseOf :: (Testible a, Testible b)
-  => (String, (a -> EMG b))
-  -> (String, (b -> EMG a))
+  => (String, a -> EMG b)
+  -> (String, b -> EMG a)
   -> Spec
 isInverseOf (fname, f) (gname, g) =
   describe fname $ it ("undoes " ++ gname) $ property (isId (g >=> f))

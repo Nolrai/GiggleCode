@@ -1,50 +1,54 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, FlexibleContexts, NamedFieldPuns, GeneralizedNewtypeDeriving #-}
 module GrammarToListSpec
-    ( spec
-    ) where
+  ( spec
+  ) where
 
 import GrammarToList
-    ( grammarToList
-    , listToGrammar
-    )
-import Prelude hiding (init)
+  ( grammarToList
+  , listToGrammar
+  )
+
+import Grammar (Grammar)
+import Symbol (endline, Symbol)
+import Symbol as S
+
 import TestUtils
-import Grammar
 import SymbolSpec ()
-import Symbol
-import Data.Vector (init, Vector, snoc)
+
+import Control.Monad.Exception
+import Data.Vector (init, Vector, snoc, last)
 import Test.QuickCheck
+import Prelude hiding (init, last)
 
-newtype Valid v = Valid {fromValid :: Vector v}
-  deriving (Eq, Ord)
 
-instance Show v => Show (Valid v) where
-  show (Valid x) = show x
+newtype Ends = End {raw :: Vector Symbol}
+  deriving (Arbitrary, Eq)
 
-mkValid :: Vector Symbol -> Valid Symbol
-mkValid = Valid . (`snoc` Symbol Nothing)
-unValid :: Valid Symbol -> Vector Symbol
-unValid (Valid v) = init v
+fromValid :: Vector Symbol -> Ends
+fromValid v = 
+  if last v == endline
+    then End (init v)
+    else error $ "Last Symbol is " ++ show (last v) ++ "not endline"
+toValid :: Ends -> Vector Symbol
+toValid End {raw} = raw `snoc` endline
 
--- It's important that in the test functions its Valid/fromValid
--- and NOT mkValid/unValid because we are just using Valid to
--- over write the Arbitrary instance.
---        (which is what mkValid and unValid are for)
-gltest :: Grammar.Grammar -> Valid Symbol
-lgtest :: Valid Symbol -> Grammar.Grammar
-gltest = Valid . grammarToList
-lgtest = listToGrammar . fromValid
+instance Show Ends where
+  show = show . toValid
 
-instance Arbitrary (Valid Symbol) where
-  arbitrary = mkValid <$> arbitrary
-  shrink = (mkValid <$>) . shrink . unValid
+gltest :: Monad m => Grammar -> m Ends
+lgtest 
+  :: ( Throws S.UnsafeToNodeEndline l
+     , Throws S.TailVEmptyVector l
+     ) => Ends -> EM l Grammar
+gltest = (fromValid <$>) . grammarToList
+lgtest = listToGrammar . toValid
 
 spec :: Spec
 spec =
   do
-  areInverses
-    ("mkValid", mkValid)
-    ("unValid", unValid)
+  ("fromValid", pure . fromValid) 
+    `isInverseOf`
+    ("fromEnds", pure . toValid)
   areInverses
     ("grammarToList", gltest)
     ("listToGrammar", lgtest)
