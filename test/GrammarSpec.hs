@@ -6,7 +6,7 @@ import TestUtils (Spec)
 import Control.Applicative ((<$>))
 
 spec :: Spec
-spec = return ()
+spec = pure ()
 
 instance Arbitrary Node where
   arbitrary = oneof [TermNode <$> arbitrary, NonTermNode <$> arbitrary]

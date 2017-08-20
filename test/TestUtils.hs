@@ -35,8 +35,8 @@ instance Arbitrary a => Arbitrary (V.Vector a) where
 type Testible a = (Arbitrary a, Show a, Eq a)
 
 areInverses :: (Testible a, Testible b)
-  => (String, (a -> EMG b))
-  -> (String, (b -> EMG a))
+  => (String, a -> EMG b)
+  -> (String, b -> EMG a)
   -> Spec
 areInverses (fname, f) (gname, g) =
   do

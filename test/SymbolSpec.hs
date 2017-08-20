@@ -1,5 +1,5 @@
-{-# LANGUAGE StandaloneDeriving, DeriveGeneric, GeneralizedNewtypeDeriving, FlexibleContexts #-}
-module SymbolSpec (spec) where
+{-# LANGUAGE StandaloneDeriving, GeneralizedNewtypeDeriving, FlexibleContexts, NamedFieldPuns #-}
+module SymbolSpec (spec, Ends, fromValid, toValid) where
 import Symbol
 
 import TestUtils
@@ -10,7 +10,7 @@ import qualified Test.QuickCheck.Monadic as M
 import GrammarSpec ()
 import Grammar (Node)
 import qualified Data.Vector as V
-import Data.Vector (Vector)
+import Data.Vector (Vector, snoc)
 import qualified Control.Exception as E
 import Control.Applicative ((<$>),)
 import GHC.Generics
@@ -34,10 +34,10 @@ spec =
     ("breakAtEndline", breakAtEndline')
     ("unBreakAtEndline", unBreakAtEndline')
   where
-  breakAtEndline' :: Valid -> EMG (Vector Node, Vector Symbol)
-  breakAtEndline' = breakAtEndline . fromValid
-  unBreakAtEndline' :: (Vector Node, Vector Symbol) -> EMG Valid
-  unBreakAtEndline' = unsafeMkValid . unBreakAtEndline
+  breakAtEndline' :: Ends -> EMG (Vector Node, Vector Symbol)
+  breakAtEndline' = breakAtEndline . toValid
+  unBreakAtEndline' :: (Vector Node, Vector Symbol) -> EMG Ends
+  unBreakAtEndline' = fmap fromValid . unBreakAtEndline
   testIsNodeUnsafeToNode :: Symbol -> Property
   testIsNodeUnsafeToNode x = monadicIO
     $ do
@@ -45,22 +45,16 @@ spec =
       let r = (tryEM . unsafeToNode) x
       (M.assert . isRight) r
 
-instance Arbitrary Valid where
-  arbitrary = discardInvalid <$> arbitrary
-  shrink (Valid v) = discardInvalid <$> shrink v
+newtype Ends = End {raw :: Vector Symbol}
+  deriving (Arbitrary, Eq)
+    
+fromValid :: Vector Symbol -> Ends
+fromValid v = 
+  if V.last v == endline
+    then End (V.init v)
+    else error $ "Last Symbol is " ++ show (V.last v) ++ "not endline"
+toValid :: Ends -> Vector Symbol
+toValid End {raw} = raw `snoc` endline
 
-discardInvalid :: Vector Symbol -> Valid
-discardInvalid v =
-  if V.all (/= endline) v
-    then discard
-    else Valid v
-
-data Valid = Valid {fromValid :: Vector Symbol}
-  deriving (Show, Eq, Generic)
-
-unsafeMkValid :: Vector Symbol -> EMG Valid
-unsafeMkValid v =
-  if (any (== endline) v)
-    then (E.throw UnsafeToNodeEndline)
-    else pure $ Valid v
-
+instance Show Ends where
+  show = (\s -> "End " ++ s ++ " \\End") . show . toValid

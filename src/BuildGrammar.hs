@@ -33,7 +33,7 @@ lookupNode rules main = V.sequence (go =<< main)
 lineToText :: Vector Term -> T.Text
 lineToText = T.pack . V.toList
 
-data InvalidNonTerm = InvalidNonTerm NonTerm
+newtype InvalidNonTerm = InvalidNonTerm NonTerm
   deriving (Show)
 
 instance Exception InvalidNonTerm where
