@@ -9,31 +9,27 @@ import GrammarToList
   )
 
 import Grammar (Grammar)
-import Symbol (endline, Symbol)
-import Symbol as S
+import Symbol (UnsafeToNodeEndline, TailVEmptyVector)
 
 import TestUtils
-import SymbolSpec ()
+import SymbolSpec (Ends, toValid, fromValid)
 
 import Control.Monad.Exception
-import Data.Vector (init, Vector, snoc, last)
-import Test.QuickCheck
-import Prelude hiding (init, last)
 
 gltest :: Monad m => Grammar -> m Ends
 lgtest 
-  :: ( Throws S.UnsafeToNodeEndline l
-     , Throws S.TailVEmptyVector l
+  :: ( Throws UnsafeToNodeEndline l
+     , Throws TailVEmptyVector l
      ) => Ends -> EM l Grammar
 gltest = (fromValid <$>) . grammarToList
-lgtest = istToGrammar . toValid
+lgtest = listToGrammar . toValid
 
 spec :: Spec
 spec =
   do
   ("fromValid", pure . fromValid) 
     `isInverseOf`
-    ("fromEnds", pure . toValid)
+    ("toValid", pure . toValid)
   areInverses
     ("grammarToList", gltest)
     ("listToGrammar", lgtest)

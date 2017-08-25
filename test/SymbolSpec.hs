@@ -4,16 +4,12 @@ import Symbol
 
 import TestUtils
 import Test.QuickCheck (property, Property, Arbitrary(..))
-import Test.QuickCheck.Exception (discard)
 import Test.QuickCheck.Monadic (monadicIO, pre)
 import qualified Test.QuickCheck.Monadic as M
 import GrammarSpec ()
 import Grammar (Node)
 import qualified Data.Vector as V
 import Data.Vector (Vector, snoc)
-import qualified Control.Exception as E
-import Control.Applicative ((<$>),)
-import GHC.Generics
 import Control.Monad.Exception
 
 deriving instance Arbitrary Symbol
@@ -30,14 +26,15 @@ spec =
     ("toSymbol", toSymbol .> return)
   it "isNode allows unsafeToNode"
     $ property testIsNodeUnsafeToNode
-  areInverses
+  ("unBreakAtEndline", unBreakAtEndline')
+    `isInverseOf`
     ("breakAtEndline", breakAtEndline')
-    ("unBreakAtEndline", unBreakAtEndline')
   where
   breakAtEndline' :: Ends -> EMG (Vector Node, Vector Symbol)
   breakAtEndline' = breakAtEndline . toValid
   unBreakAtEndline' :: (Vector Node, Vector Symbol) -> EMG Ends
-  unBreakAtEndline' = fmap fromValid . unBreakAtEndline
+  unBreakAtEndline' pair = pure (fromValid $ unBreakAtEndline pair)
+
   testIsNodeUnsafeToNode :: Symbol -> Property
   testIsNodeUnsafeToNode x = monadicIO
     $ do
