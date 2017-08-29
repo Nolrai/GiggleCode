@@ -1,50 +1,31 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, FlexibleContexts, NamedFieldPuns, GeneralizedNewtypeDeriving #-}
 module GrammarToListSpec
-    ( spec
-    ) where
+  ( spec
+  ) where
 
 import GrammarToList
-    ( grammarToList
-    , listToGrammar
-    )
-import Prelude hiding (init)
+  ( grammarToList
+  , listToGrammar
+  )
+
+import Grammar (Grammar)
+import Symbol (UnsafeToNodeEndline, TailVEmptyVector)
+
 import TestUtils
-import Grammar
-import SymbolSpec ()
-import Symbol
-import Data.Vector (init, Vector, snoc)
-import Test.QuickCheck
+import SymbolSpec (Ends, toValid, fromValid)
 
-newtype Valid v = Valid {fromValid :: Vector v}
-  deriving (Eq, Ord)
+import Control.Monad.Exception
 
-instance Show v => Show (Valid v) where
-  show (Valid x) = show x
-
-mkValid :: Vector Symbol -> Valid Symbol
-mkValid = Valid . (`snoc` Symbol Nothing)
-unValid :: Valid Symbol -> Vector Symbol
-unValid (Valid v) = init v
-
--- It's important that in the test functions its Valid/fromValid
--- and NOT mkValid/unValid because we are just using Valid to
--- over write the Arbitrary instance.
---        (which is what mkValid and unValid are for)
-gltest :: Grammar.Grammar -> Valid Symbol
-lgtest :: Valid Symbol -> Grammar.Grammar
-gltest = Valid . grammarToList
-lgtest = listToGrammar . fromValid
-
-instance Arbitrary (Valid Symbol) where
-  arbitrary = mkValid <$> arbitrary
-  shrink = (mkValid <$>) . shrink . unValid
+gltest :: Monad m => Grammar -> m Ends
+lgtest 
+  :: ( Throws UnsafeToNodeEndline l
+     , Throws TailVEmptyVector l
+     ) => Ends -> EM l Grammar
+gltest = (fromValid <$>) . grammarToList
+lgtest = listToGrammar . toValid
 
 spec :: Spec
 spec =
-  do
-  areInverses
-    ("mkValid", mkValid)
-    ("unValid", unValid)
   areInverses
     ("grammarToList", gltest)
     ("listToGrammar", lgtest)

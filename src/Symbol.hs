@@ -91,5 +91,5 @@ instance Show Symbol where
 
 -- Testing only.
 unBreakAtEndline :: (Vector Node, Vector Symbol) -> Vector Symbol
-unBreakAtEndline (line, rest) = (fmap toSymbol line) <> (endline `V.cons` rest)
+unBreakAtEndline (line, rest) = fmap toSymbol line <> (endline `V.cons` rest)
 
