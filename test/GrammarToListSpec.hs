@@ -26,10 +26,6 @@ lgtest = listToGrammar . toValid
 
 spec :: Spec
 spec =
-  do
-  ("fromValid", pure . fromValid) 
-    `isInverseOf`
-    ("toValid", pure . toValid)
   areInverses
     ("grammarToList", gltest)
     ("listToGrammar", lgtest)

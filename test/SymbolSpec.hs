@@ -21,8 +21,11 @@ isRight (Right _) = True
 spec :: Spec
 spec =
   do
-  isInverseOf
-    ("unsafeToNode", unsafeToNode)
+  ("fromValid", pure . fromValid) 
+    `isInverseOf`
+    ("toValid", pure . toValid)
+  ("unsafeToNode", unsafeToNode)
+    `isInverseOf`
     ("toSymbol", toSymbol .> return)
   it "isNode allows unsafeToNode"
     $ property testIsNodeUnsafeToNode
@@ -33,8 +36,7 @@ spec =
   breakAtEndline' :: Ends -> EMG (Vector Node, Vector Symbol)
   breakAtEndline' = breakAtEndline . toValid
   unBreakAtEndline' :: (Vector Node, Vector Symbol) -> EMG Ends
-  unBreakAtEndline' pair = pure (fromValid $ unBreakAtEndline pair)
-
+  unBreakAtEndline' = pure . fromValid . unBreakAtEndline
   testIsNodeUnsafeToNode :: Symbol -> Property
   testIsNodeUnsafeToNode x = monadicIO
     $ do
@@ -54,4 +56,4 @@ toValid :: Ends -> Vector Symbol
 toValid End {raw} = raw `snoc` endline
 
 instance Show Ends where
-  show = (\s -> "End " ++ s ++ " \\End") . show . toValid
+  show = (++) "End:" . show . toValid
