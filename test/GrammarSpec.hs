@@ -13,7 +13,7 @@ instance Arbitrary Node where
   arbitrary = oneof [TermNode <$> arbitrary, NonTermNode <$> arbitrary]
 
 mkLine :: Gen Line
-mkLine = f <$> arbitrary <*> arbitrary <*> scale (\x -> x - 2) arbitrary
+mkLine = f <$> arbitrary <*> arbitrary <*> scale (\x -> max (x - 2) 0) arbitrary
   where
   f a b c = a `cons` (b `cons` c)
 
