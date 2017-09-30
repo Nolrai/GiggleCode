@@ -4,7 +4,7 @@ module GrammarToList
     , listToGrammar
     ) where
 import qualified Data.Vector as V
-import Data.Vector (Vector, empty, cons, snoc)
+import Data.Vector (Vector, empty, snoc)
 import Grammar
 import Symbol as S
 import Control.Monad.Exception
@@ -12,7 +12,7 @@ import Control.Monad.Exception
 
 grammarToList :: Monad m => Grammar -> m (Vector Symbol)
 grammarToList (Grammar main rules)
-  = return $ V.concatMap ((endline `cons`) . (toSymbol <$>)) (V.cons main rules)
+  = return $ V.concatMap ((`snoc` endline) . (toSymbol <$>)) (V.cons main rules)
 
 listToGrammar ::
   ( Throws S.UnsafeToNodeEndline l

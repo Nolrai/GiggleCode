@@ -13,7 +13,9 @@ instance Arbitrary Node where
   arbitrary = oneof [TermNode <$> arbitrary, NonTermNode <$> arbitrary]
 
 mkLine :: Gen Line
-mkLine = f <$> arbitrary <*> arbitrary <*> scale (\x -> x - 2) arbitrary
+mkLine = f <$> arbitrary 
+           <*> arbitrary 
+           <*> scale (\x -> max (x - 2) 0) arbitrary
   where
   f a b c = a `cons` (b `cons` c)
 
@@ -25,6 +27,7 @@ mkRules =
 
 instance Arbitrary Grammar where
   arbitrary = Grammar <$> mkLine <*> mkRules
-  shrink (Grammar a b) = drop 1 $ Grammar <$> shrink' a <*> shrink' b
+  shrink (Grammar a b) = -- the list Applicative
+    drop 1 $ Grammar <$> shrink' a <*> shrink' b
     where
       shrink' x = x : shrink x
