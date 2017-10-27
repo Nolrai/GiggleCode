@@ -30,6 +30,7 @@ library
                      , vector
                      , mtl
                      , control-monad-exception
+                     , data-sword
 
   other-modules:       B
                      , T
@@ -47,6 +48,7 @@ executable GiggleCode
                      , GiggleCode
                      , control-monad-exception
                      , deepseq
+                     , data-sword
   default-language:    Haskell2010
 
 test-suite GiggleCode-test
@@ -63,6 +65,7 @@ test-suite GiggleCode-test
                      , QuickCheck
                      , deepseq
                      , control-monad-exception
+                     , data-sword
 
   other-modules:       B
                      , BuildGrammarSpec
