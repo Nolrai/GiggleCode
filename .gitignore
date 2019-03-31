@@ -1,6 +1,3 @@
 .stack-work/
+GiggleCode.cabal
 *~
-error*.txt
-*.swp
-temp.*
-*.err

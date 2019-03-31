@@ -9,6 +9,8 @@ module Grammar
     ) where
 import Data.Text.Lazy as T
 import Data.ShortWord (Word5)
+import Data.Vector
+import Data.Char(chr, ord)
 
 -- "In addition, there is a contiguous range of another 32 noncharacter code 
 --   points in the BMP: U+FDD0..U+FDEF." 
@@ -20,8 +22,8 @@ nonTermEnd = '\xFDEF'
 
 toNode :: Char -> Node
 toNode t = 
-  if isNonTerm $ t
-    then NonTerm (toEnum . fromEnum $ t - nonTermStart) 
+  if isNonTerm t
+    then NonTerm (toEnum $ ord t - ord nonTermStart) 
     else Term t
 
 fromNode :: Node -> Char
@@ -29,10 +31,10 @@ fromNode (Term t) = t
 fromNode (NonTerm x) = chr $ ord nonTermStart + fromEnum x
 
 asNode :: (Node -> Node) -> Char -> Char
-asNode f = toNode . f . fromNode
+asNode f = fromNode . f . toNode
 
-isTerm :: Char -> Node
-isNonTerm :: Char -> Node
+isTerm :: Char -> Bool
+isNonTerm :: Char -> Bool
 isTerm t = t < nonTermStart || t > nonTermEnd
 isNonTerm t = t >= nonTermStart && t <= nonTermEnd
 

@@ -1,85 +1,95 @@
-name:                GiggleCode
-version:             0.1.0.0
-synopsis:            A toy compresor for text like data.
-description:         Please see README.md
-homepage:            https://github.com/Nolrai/GiggleCode#readme
-license:             BSD3
-license-file:        LICENSE
-author:              Christopher A. Upshaw
-maintainer:          chrisaupshaw@gmail.com
-copyright:           2016 Christopher A. Upshaw
-category:            Compression
-build-type:          Simple
--- extra-source-files:
-cabal-version:       >=1.10
+cabal-version: 1.12
 
-library
-  hs-source-dirs:      src
-  ghc-options:         -W -Wall -Werror
-  exposed-modules:     Lib
-                     , BuildGrammar
-                     , Grammar
-                     , GrammarToList
-                     , PadicEncode
-                     , Symbol
-                     , Utils
+-- This file has been generated from package.yaml by hpack version 0.31.1.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 4b697e2b24f9d8f3451bc62289f6b6a6bc6edf33934288a0f808696b692e6ce9
 
-  build-depends:       base >= 4.7 && < 5
-                     , bytestring
-                     , text
-                     , vector
-                     , mtl
-                     , control-monad-exception
-                     , data-sword
-
-  other-modules:       B
-                     , T
-
-  default-language:    Haskell2010
-
-executable GiggleCode
-  hs-source-dirs:      app
-  main-is:             Main.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -W -Wall -Werror
-  build-depends:       base
-                     , turtle
-                     , bytestring
-                     , text
-                     , GiggleCode
-                     , control-monad-exception
-                     , deepseq
-                     , data-sword
-  default-language:    Haskell2010
-
-test-suite GiggleCode-test
-  type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
-  main-is:             Spec.hs
-
-  build-depends:       base
-                     , bytestring
-                     , text
-                     , vector
-                     , GiggleCode
-                     , hspec
-                     , QuickCheck
-                     , deepseq
-                     , control-monad-exception
-                     , data-sword
-
-  other-modules:       B
-                     , BuildGrammarSpec
-                     , GrammarSpec
-                     , GrammarToListSpec
-                     , LibSpec
-                     , PadicEncodeSpec
-                     , SymbolSpec
-                     , T
-                     , TestUtils
-
-  ghc-options:         -threaded -W -Wall -Werror -O2 -fno-warn-orphans
-  default-language:    Haskell2010
+name:           GiggleCode
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/Nolrai/GiggleCode#readme>
+category:       compression
+homepage:       https://github.com/Nolrai/GiggleCode#readme
+bug-reports:    https://github.com/Nolrai/GiggleCode/issues
+author:         Chris Upshaw
+maintainer:     chrisaupshaw.work@gmail.com
+copyright:      2018 Chris Upshaw
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
 
 source-repository head
-  type:     git
+  type: git
   location: https://github.com/Nolrai/GiggleCode
+
+library
+  exposed-modules:
+      B
+      BuildGrammar
+      Grammar
+      GrammarToList
+      Lib
+      PadicEncode
+      Symbol
+      T
+      Utils
+  other-modules:
+      Paths_GiggleCode
+  hs-source-dirs:
+      src
+  build-depends:
+      base
+    , bytestring
+    , data-sword
+    , exceptions
+    , text
+    , vector
+  default-language: Haskell2010
+
+executable GiggleCode-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_GiggleCode
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      GiggleCode
+    , base
+    , bytestring
+    , data-sword
+    , exceptions
+    , text
+    , vector
+  default-language: Haskell2010
+
+test-suite GiggleCode-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      B
+      BuildGrammarSpec
+      GrammarSpec
+      GrammarToListSpec
+      LibSpec
+      PadicEncodeSpec
+      SymbolSpec
+      T
+      TestUtils
+      Paths_GiggleCode
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      GiggleCode
+    , base
+    , bytestring
+    , data-sword
+    , exceptions
+    , text
+    , vector
+  default-language: Haskell2010
