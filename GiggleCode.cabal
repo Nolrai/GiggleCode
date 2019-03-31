@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4b697e2b24f9d8f3451bc62289f6b6a6bc6edf33934288a0f808696b692e6ce9
+-- hash: 4e979f7e6bc04fcd4b78a00cc71e3c50dd3d733314dbe08bd6c799b09072bf1b
 
 name:           GiggleCode
 version:        0.1.0.0
@@ -36,6 +36,7 @@ library
       PadicEncode
       Symbol
       T
+      Tokenize
       Utils
   other-modules:
       Paths_GiggleCode
